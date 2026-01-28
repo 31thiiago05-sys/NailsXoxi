@@ -1,0 +1,106 @@
+// server/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums removed for SQLite compatibility
+// Role: CLIENT, ADMIN
+// AppointmentStatus: PENDING, CONFIRMED, CANCELLED, COMPLETED
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  phone     String?
+  role      String     @default("CLIENT")
+  isBlocked Boolean    @default(false)
+
+  
+  // New Fields for Cancellation Policy
+  debt                Decimal  @default(0) // Deuda pendiente
+  creditAmount        Decimal  @default(0) // Saldo a favor
+  creditExpiry        DateTime? // Vencimiento del saldo
+  lastRescheduleDate  DateTime? // Última vez que reagendó
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  appointments Appointment[]
+}
+
+model Category {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  services Service[]
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Decimal
+  durationMin Int      // Duración en minutos
+  imageUrl    String?  // @deprecated - Use images instead
+  images      String?  // JSON string array of URLs: "['url1', 'url2']"
+
+  // Nuevos campos
+  deposit             Decimal  @default(0) // Seña
+  removalPriceOwn     Decimal  @default(0) // Retiro (Propio)
+  removalPriceForeign Decimal  @default(0) // Retiro (Ajeno)
+  
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  
+  appointments Appointment[]
+}
+
+model Availability {
+  id        String   @id @default(uuid())
+  date      DateTime @unique
+  isBlocked Boolean  @default(false)
+  slots     String   // Store as JSON stringified
+}
+
+model Appointment {
+  id        String            @id @default(uuid())
+  date      DateTime          // Fecha y hora del turno
+  status    String @default("PENDING")
+  cancellationReason String? // Razón de cancelación
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  serviceId String
+  service   Service  @relation(fields: [serviceId], references: [id])
+  
+  payment   Payment?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  mpPaymentId   String?  @unique // ID de pago de Mercado Pago
+  mpStatus      String?  // status de Mercado Pago (approved, etc)
+  amount        Decimal
+  
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  
+  createdAt     DateTime @default(now())
+}
+
+model EarningsAdjustment {
+  id          String   @id @default(uuid())
+  description String
+  amount      Decimal
+  date        DateTime
+  createdAt   DateTime @default(now())
+}
