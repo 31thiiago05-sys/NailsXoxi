@@ -128,7 +128,7 @@ export default function LandingPage() {
 
                 <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
                     <Link
-                        to="/booking"
+                        to={isAuthenticated ? "/booking" : "/login"}
                         className="group relative inline-flex items-center gap-3 bg-glossy text-white px-10 py-5 rounded-full text-lg md:text-xl font-bold shadow-xl shadow-accent/20 overflow-hidden transition-all hover:scale-105 hover:shadow-2xl hover:shadow-accent/30"
                     >
                         <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
