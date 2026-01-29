@@ -161,11 +161,7 @@ export default function ServicesManager() {
         }));
     };
 
-    // Helper to get category name
-    const getCategoryName = (catId: string) => {
-        const cat = categories.find(c => c.id === catId);
-        return cat ? cat.name : 'Desconocida';
-    };
+
 
     return (
         <div className="relative">
