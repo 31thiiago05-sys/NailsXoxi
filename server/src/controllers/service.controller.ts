@@ -30,6 +30,7 @@ export const getServices = async (req: Request, res: Response) => {
 
         res.json(formattedServices);
     } catch (error) {
+        console.error('Error in getServices:', error);
         res.status(500).json({ error: 'Error fetching services' });
     }
 };
@@ -186,6 +187,7 @@ export const getCategories = async (req: Request, res: Response) => {
         const categories = await prisma.category.findMany();
         res.json(categories);
     } catch (error) {
+        console.error('Error in getCategories:', error);
         res.status(500).json({ error: 'Error fetching categories' });
     }
 }
