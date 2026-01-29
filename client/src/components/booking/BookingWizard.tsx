@@ -117,6 +117,9 @@ export default function BookingWizard() {
         return slots.map(time => {
             // Check if this specific time on this date is taken
             const isTaken = existingAppointments.some(appt => {
+                // Ignore PENDING and CANCELLED appointments (they don't block slots)
+                if (appt.status === 'PENDING' || appt.status === 'CANCELLED') return false;
+
                 const apptDate = new Date(appt.date);
                 return isSameDay(apptDate, date) && format(apptDate, 'HH:mm') === time;
             });
