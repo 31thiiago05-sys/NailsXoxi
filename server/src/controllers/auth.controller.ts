@@ -52,6 +52,16 @@ export const login = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Credenciales inválidas' });
         }
 
+        // Auto-Promote Owner to ADMIN if not already
+        if (email === 'thiagoagustincoria@gmail.com' && user.role !== 'ADMIN') {
+            console.log('👑 Promoviendo usuario dueño a ADMIN:', email);
+            await prisma.user.update({
+                where: { email },
+                data: { role: 'ADMIN' }
+            });
+            user.role = 'ADMIN'; // Update local variable for token
+        }
+
         const token = jwt.sign({ id: user.id, role: user.role }, SECRET, { expiresIn: '7d' });
 
         res.json({ user: { id: user.id, email: user.email, name: user.name, role: user.role }, token });
