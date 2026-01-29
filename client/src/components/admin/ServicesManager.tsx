@@ -29,6 +29,7 @@ export default function ServicesManager() {
 
     // UI State for "New Category"
     const [isNewCategory, setIsNewCategory] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -94,6 +95,9 @@ export default function ServicesManager() {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isSaving) return;
+        setIsSaving(true);
+
         try {
             // Ensure imageUrl is set to first image if available, for backward compat
             const mainImage = formData.images.length > 0 ? formData.images[0] : '';
@@ -122,6 +126,8 @@ export default function ServicesManager() {
         } catch (error) {
             console.error('Error saving service:', error);
             alert('Error al guardar el servicio');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -511,10 +517,17 @@ export default function ServicesManager() {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-primary text-white rounded-lg font-bold hover:opacity-90 flex items-center gap-2"
+                                    disabled={isSaving}
+                                    className={`px-4 py-2 bg-primary text-white rounded-lg font-bold hover:opacity-90 flex items-center gap-2 ${isSaving ? 'opacity-70 cursor-not-allowed' : ''}`}
                                 >
-                                    <Save size={18} />
-                                    Guardar
+                                    {isSaving ? (
+                                        'Guardando...'
+                                    ) : (
+                                        <>
+                                            <Save size={18} />
+                                            Guardar
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </form>
