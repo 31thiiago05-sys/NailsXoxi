@@ -295,12 +295,14 @@ export default function ServicesManager() {
                                                     <button
                                                         onClick={() => handleOpenModal(service)}
                                                         className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        aria-label={`Editar servicio ${service.name}`}
                                                     >
                                                         <Edit2 size={18} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDelete(service.id)}
                                                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        aria-label={`Eliminar servicio ${service.name}`}
                                                     >
                                                         <Trash2 size={18} />
                                                     </button>
