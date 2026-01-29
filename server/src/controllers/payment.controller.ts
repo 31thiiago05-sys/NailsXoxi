@@ -104,11 +104,82 @@ export const receiveWebhook = async (req: Request, res: Response) => {
                         }
 
                         // 3. Confirmar el turno
-                        await prisma.appointment.update({
+                        const updatedAppointment = await prisma.appointment.update({
                             where: { id: appointmentId },
-                            data: { status: 'CONFIRMED' }
+                            data: { status: 'CONFIRMED' },
+                            include: {
+                                user: true,
+                                service: true
+                            }
                         });
                         console.log('Turno confirmado:', appointmentId);
+
+                        // 4. Enviar emails de confirmación
+                        try {
+                            const { sendEmail } = await import('../utils/email');
+
+                            const apptDate = new Date(updatedAppointment.date);
+                            const formattedDate = apptDate.toLocaleDateString('es-AR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric'
+                            });
+                            const formattedTime = apptDate.toLocaleTimeString('es-AR', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: false
+                            });
+
+                            const servicePrice = Number(updatedAppointment.service.price);
+                            const deposit = servicePrice * 0.5;
+                            const remaining = servicePrice - deposit;
+
+                            // Email al Cliente
+                            const clientEmailText = `✨Te espero el ${formattedDate} a las ${formattedTime} hs. Dirección: San Ramón 1168, depto y timbre 4, Villa Bosch.
+
+🕣El tiempo de espera son 10 min. Pasado ese tiempo se cobrará $4000 adicionales (según disponibilidad), o se cancela el turno debiendo abonar el restante.
+
+⚠️ IMPORTANTE: El precio final puede variar. Si el diseño realizado es más complejo que el reservado, se cobrará la diferencia. Si es más sencillo, se ajustará el precio a favor.
+
+🦋Venir sin acompañantes 🫶🏼
+
+(Servicio: ${updatedAppointment.service.name})
+💰 Seña abonada: $${deposit}
+💵 Resta abonar en el local: $${remaining}
+
+🚨 Si necesitas reagendar o cancelar, hazlo desde la Aplicación (Sección Mis Turnos):
+✅ +72 hs antes: Tu seña queda como saldo a favor (validez 30 días) para reagendar.
+⚠️ -72 hs antes: Perdés la seña y se genera deuda por el total del servicio.`;
+
+                            await sendEmail({
+                                to: updatedAppointment.user.email,
+                                subject: 'Turno Confirmado - Nails Xoxi',
+                                text: clientEmailText
+                            });
+
+                            // Email al Dueño
+                            const ownerEmailText = `NUEVA RESERVA CONFIRMADA
+
+CLIENTE: ${updatedAppointment.user.name}
+TELÉFONO: ${updatedAppointment.user.phone || 'No especificado'}
+EMAIL: ${updatedAppointment.user.email}
+
+TURNO: ${formattedDate} a las ${formattedTime}
+SERVICIO: ${updatedAppointment.service.name}
+
+SEÑA: $${deposit}
+RESTA: $${remaining}`;
+
+                            await sendEmail({
+                                to: 'negocioxoxi@gmail.com',
+                                subject: `Nueva Reserva: ${updatedAppointment.user.name}`,
+                                text: ownerEmailText
+                            });
+
+                            console.log('✅ Emails de confirmación enviados');
+                        } catch (emailError) {
+                            console.error('❌ Error enviando emails de confirmación:', emailError);
+                        }
                     } else if (paymentInfo.status === 'rejected') {
                         console.log('Pago rechazado:', paymentInfo.id);
                         // Podrías actualizar el turno a CANCELLED si querés

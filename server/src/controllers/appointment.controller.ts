@@ -146,6 +146,25 @@ export const cancelAppointment = async (req: Request, res: Response) => {
                     text: emailText
                 });
 
+                // Email al Dueño
+                const ownerEmailText = `CANCELACIÓN TARDÍA
+
+CLIENTE: ${appointment.user.name}
+TELÉFONO: ${appointment.user.phone || 'No especificado'}
+EMAIL: ${appointment.user.email}
+
+TURNO: ${apptDate.toLocaleDateString('es-AR')} a las ${apptDate.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}
+SERVICIO: ${appointment.service.name}
+
+TIPO: Cancelación Tardía (menos de 72hs)
+DEUDA GENERADA: $${penalty}`;
+
+                await sendEmail({
+                    to: 'negocioxoxi@gmail.com',
+                    subject: `CANCELACIÓN TARDÍA: ${appointment.user.name}`,
+                    text: ownerEmailText
+                });
+
             } else {
                 // EARLY CANCELLATION
                 // Credit = Deposit
@@ -167,6 +186,25 @@ export const cancelAppointment = async (req: Request, res: Response) => {
                     to: appointment.user.email,
                     subject: 'Cancelación Exitosa - Saldo a Favor',
                     text: emailText
+                });
+
+                // Email al Dueño
+                const ownerEmailText = `CANCELACIÓN ANTICIPADA
+
+CLIENTE: ${appointment.user.name}
+TELÉFONO: ${appointment.user.phone || 'No especificado'}
+EMAIL: ${appointment.user.email}
+
+TURNO: ${apptDate.toLocaleDateString('es-AR')} a las ${apptDate.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}
+SERVICIO: ${appointment.service.name}
+
+TIPO: Cancelación Anticipada (más de 72hs)
+CRÉDITO GENERADO: $${credit}`;
+
+                await sendEmail({
+                    to: 'negocioxoxi@gmail.com',
+                    subject: `CANCELACIÓN ANTICIPADA: ${appointment.user.name}`,
+                    text: ownerEmailText
                 });
             }
         });

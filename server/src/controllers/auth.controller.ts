@@ -101,7 +101,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
             }
         });
 
-        const resetLink = `${process.env.PUBLIC_URL || 'https://nailsxoxi-xo1c.onrender.com'}/reset-password?token=${token}`;
+        const resetLink = `${process.env.CLIENT_URL || 'https://nails-xoxi.vercel.app'}/reset-password?token=${token}`;
 
         await sendEmail({
             to: email,
