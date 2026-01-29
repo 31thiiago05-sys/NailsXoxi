@@ -14,6 +14,9 @@ import MyAppointments from './components/client/MyAppointments';
 import LoginPage from './components/auth/LoginPage';
 import RegisterPage from './components/auth/RegisterPage';
 import PoliciesPage from './pages/PoliciesPage';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentFailure from './pages/PaymentFailure';
+import PaymentPending from './pages/PaymentPending';
 import RequireAuth from './components/auth/RequireAuth';
 
 function App() {
@@ -32,6 +35,11 @@ function App() {
               <BookingWizard />
             </div>
           } />
+
+          {/* Rutas de Retorno de Pago */}
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/failure" element={<PaymentFailure />} />
+          <Route path="/payment/pending" element={<PaymentPending />} />
 
           {/* Rutas Cliente Protegidas */}
           <Route element={<RequireAuth />}>

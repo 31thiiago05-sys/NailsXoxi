@@ -56,7 +56,70 @@ Necesitas una base de datos en la nube. Recomiendo **Neon.tech** (es gratis y f�
         - Ejemplo: `https://nails-xoxi-server.onrender.com/api`
 6. Haz clic en "Deploy".
 
-## 5. Conectar Dominio (nailsxoxi.shop) en Vercel
+---
+
+## 5. Configuración de Mercado Pago
+
+### 5.1. Configurar Credenciales en el Servidor (Render)
+
+1. **Ve a tu servicio en Render** → Settings → Environment
+2. **Agrega las siguientes variables de entorno**:
+
+```bash
+# Mercado Pago - Usar credenciales de PRODUCCIÓN
+MP_ACCESS_TOKEN=APP_USR-8861941003350621-012911-1f019ddea5313252ea76d3ba9a5febf8-734013766
+MP_PUBLIC_KEY=APP_USR-2893d188-1d9a-416d-b35b-470b1e077538
+
+# URLs para producción
+CLIENT_URL=https://nails-xoxi.vercel.app
+SERVER_URL=[URL_DE_TU_SERVIDOR_EN_RENDER]
+```
+
+> **Nota**: Reemplaza `[URL_DE_TU_SERVIDOR_EN_RENDER]` con la URL real de tu backend en Render (ej: `https://nails-xoxi-api.onrender.com`)
+
+### 5.2. Configurar Webhook en Mercado Pago
+
+Para que Mercado Pago notifique los cambios de estado de pago:
+
+1. **Ve a** <https://www.mercadopago.com.ar/developers>
+2. **Selecciona** tu aplicación "Nails Xoxi Pagos"
+3. **Ve a** la sección "Webhooks"
+4. **Agrega** la siguiente URL:
+
+   ```
+   https://[TU_SERVIDOR_EN_RENDER]/api/payments/webhook
+   ```
+
+5. **Selecciona** el evento "Payments"
+6. **Guarda** los cambios
+
+### 5.3. Verificar Integración
+
+**Para probar en LOCAL primero (con credenciales de TEST):**
+
+```bash
+# En server/.env usar credenciales de TEST:
+MP_ACCESS_TOKEN=APP_USR-678604488675011-012911-87c84a9bb1b7f18be51c9d1420f627e7-2992706522
+CLIENT_URL=http://localhost:5173
+SERVER_URL=http://localhost:3001
+```
+
+**Tarjetas de prueba:**
+
+- ✅ Aprobada: `5031 7557 3453 0604` / CVV: `123` / Venc: `11/25`
+- ❌ Rechazada: `5031 4332 1540 6351` / CVV: `123` / Venc: `11/25`
+
+**Flujo de prueba:**
+
+1. Ir a `/booking` y crear una reserva
+2. Confirmar y pagar con Mercado Pago
+3. Usar tarjeta de prueba
+4. Verificar redirección a `/payment/success`
+5. Confirmar que la cita cambió a estado CONFIRMED en la base de datos
+
+---
+
+## 6. Configurar Dominio Personalizado (nailsxoxi.shop) en Vercel
 
 1. Una vez desplegado el proyecto en Vercel, ve a "Settings" -> "Domains".
 2. Escribe `nailsxoxi.shop` y haz clic en "Add".
