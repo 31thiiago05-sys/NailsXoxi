@@ -25,7 +25,7 @@ export const createAppointment = async (req: Request, res: Response) => {
             where: {
                 date: new Date(date),
                 status: {
-                    not: 'CANCELLED'
+                    notIn: ['CANCELLED', 'PENDING']
                 }
             }
         });
@@ -68,7 +68,12 @@ export const getMyAppointments = async (req: Request, res: Response) => {
 
     try {
         const appointments = await prisma.appointment.findMany({
-            where: { userId },
+            where: {
+                userId,
+                status: {
+                    not: 'PENDING'
+                }
+            },
             include: {
                 service: true,
             },
