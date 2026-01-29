@@ -34,6 +34,27 @@ export const getServices = async (req: Request, res: Response) => {
     }
 };
 
+import { uploadToCloudinary } from '../utils/cloudinary';
+
+const processImages = async (images: string[]): Promise<string[]> => {
+    if (!images || !Array.isArray(images)) return [];
+
+    const processedImages = await Promise.all(images.map(async (img) => {
+        // Check if it's base64
+        if (img.startsWith('data:image')) {
+            try {
+                return await uploadToCloudinary(img);
+            } catch (error) {
+                console.error("Error uploading image to Cloudinary, skipping:", error);
+                return img; // Fallback? Or null? Returning original crashes DB if giant.
+            }
+        }
+        return img; // Already a URL
+    }));
+
+    return processedImages;
+};
+
 export const createService = async (req: Request, res: Response) => {
     try {
         const { name, price, description, durationMin, categoryId, categoryName, imageUrl, deposit, removalPriceOwn, removalPriceForeign, images } = req.body;
@@ -55,14 +76,13 @@ export const createService = async (req: Request, res: Response) => {
             }
         }
 
-        // Handle images array -> JSON string
-        let imagesJSON = null;
-        if (images && Array.isArray(images)) {
-            imagesJSON = JSON.stringify(images);
-        } else if (imageUrl) {
-            // Fallback: if only imageUrl provided, make it an array of 1
-            imagesJSON = JSON.stringify([imageUrl]);
-        }
+        // Process images (Upload Base64 to Cloudinary)
+        let imagesToProcess = images || [];
+        if (!imagesToProcess.length && imageUrl) imagesToProcess = [imageUrl];
+
+        const processedImages = await processImages(imagesToProcess);
+        const imagesJSON = JSON.stringify(processedImages);
+        const mainImageUrl = processedImages.length > 0 ? processedImages[0] : null;
 
         const service = await prisma.service.create({
             data: {
@@ -70,8 +90,8 @@ export const createService = async (req: Request, res: Response) => {
                 price,
                 durationMin: parseInt(durationMin),
                 categoryId: finalCategoryId,
-                imageUrl, // Keep for backward compat if needed, or just standard
-                images: imagesJSON,
+                imageUrl: mainImageUrl, // Save Cloudinary URL
+                images: imagesJSON,     // Save array of Cloudinary URLs
                 deposit: deposit || 0,
                 removalPriceOwn: removalPriceOwn || 0,
                 removalPriceForeign: removalPriceForeign || 0,
@@ -106,35 +126,38 @@ export const updateService = async (req: Request, res: Response) => {
             }
         }
 
-        let imagesJSON = null;
-        if (images && Array.isArray(images)) {
-            imagesJSON = JSON.stringify(images);
-        } else if (imageUrl) {
-            // Fallback if legacy update logic sends imageUrl but no images array
-            // Ideally frontend sends images array always. 
-            // If images is explicit undefined, we might not want to overwrite? 
-            // With Prisma update, undefined fields are ignored. 
-            // But here we destructured. If images is undefined, imagesJSON is null.
-            // Be careful not to wipe existing images if user didn't send them.
-            // Actually standard PUT usually replaces.
-            imagesJSON = JSON.stringify([imageUrl]);
-        }
-
-        // Construct data object to only include fields present
         const updateData: any = {
             name,
             price,
             durationMin: parseInt(durationMin),
             categoryId: finalCategoryId,
-            imageUrl,
             deposit: deposit || 0,
             removalPriceOwn: removalPriceOwn || 0,
             removalPriceForeign: removalPriceForeign || 0,
             description
         };
 
+        // Handle Images Update
         if (images !== undefined) {
-            updateData.images = JSON.stringify(images);
+            const processedImages = await processImages(images);
+            updateData.images = JSON.stringify(processedImages);
+
+            // Update main image url if images changed
+            if (processedImages.length > 0) {
+                updateData.imageUrl = processedImages[0];
+            }
+        } else if (imageUrl) {
+            // Legacy fallback
+            // If only imageUrl sent, treat as single image array
+            // But check if it's base64
+            if (imageUrl.startsWith('data:image')) {
+                const newUrl = await uploadToCloudinary(imageUrl);
+                updateData.imageUrl = newUrl;
+                updateData.images = JSON.stringify([newUrl]);
+            } else {
+                updateData.imageUrl = imageUrl;
+                updateData.images = JSON.stringify([imageUrl]);
+            }
         }
 
         const service = await prisma.service.update({
