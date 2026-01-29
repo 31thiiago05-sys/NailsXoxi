@@ -2,7 +2,7 @@ import { Router } from 'express';
 // @ts-ignore
 import { authenticateToken } from '../middleware/auth.middleware';
 import { createAppointment, getAppointments, getMyAppointments, cancelAppointment } from '../controllers/appointment.controller';
-import { cancelAppointmentAdmin, markNoShow } from '../controllers/admin.controller';
+import { cancelAppointmentAdmin, markNoShow, deleteAppointmentAdmin } from '../controllers/admin.controller';
 
 const router = Router();
 
@@ -14,5 +14,6 @@ router.post('/:id/cancel', authenticateToken, cancelAppointment);
 // Admin routes
 router.post('/admin/cancel', authenticateToken, cancelAppointmentAdmin);
 router.post('/admin/mark-noshow', authenticateToken, markNoShow);
+router.post('/admin/delete', authenticateToken, deleteAppointmentAdmin);
 
 export default router;

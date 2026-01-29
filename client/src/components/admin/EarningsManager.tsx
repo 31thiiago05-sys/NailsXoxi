@@ -15,7 +15,7 @@ interface EarningItem {
 }
 
 interface Service {
-    title: string;
+    name: string;
     price: number;
 }
 
@@ -70,14 +70,14 @@ export default function EarningsManager() {
             ]);
 
             const confirmedApts: EarningItem[] = aptRes.data
-                .filter((a: Appointment) => a.status === 'CONFIRMED')
+                .filter((a: Appointment) => a.status === 'CONFIRMED' || a.status === 'Confirmado' || a.status === 'COMPLETED')
                 .map((a: Appointment) => ({
                     id: a.id,
                     date: a.date,
-                    description: `Servicio: ${a.service.title}`,
-                    amount: a.service.price,
+                    description: `Servicio: ${a.service?.name || a.service?.title || 'Sin nombre'}`,
+                    amount: Number(a.service?.price || 0),
                     type: 'BOOKING',
-                    clientName: a.client.name
+                    clientName: a.client?.name || 'Cliente'
                 }));
 
             const adjustments: EarningItem[] = adjRes.data.map((a: Adjustment) => ({

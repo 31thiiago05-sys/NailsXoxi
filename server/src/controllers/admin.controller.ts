@@ -173,3 +173,19 @@ Deuda Generada: $${penalty}`;
         res.status(500).json({ error: 'Error al marcar inasistencia' });
     }
 };
+
+// Eliminar turno permanentemente
+export const deleteAppointmentAdmin = async (req: Request, res: Response) => {
+    const { appointmentId } = req.body;
+
+    try {
+        await prisma.appointment.delete({
+            where: { id: appointmentId }
+        });
+
+        res.json({ success: true, message: 'Turno eliminado permanentemente.' });
+    } catch (error) {
+        console.error('Error eliminando turno:', error);
+        res.status(500).json({ error: 'Error al eliminar turno' });
+    }
+};

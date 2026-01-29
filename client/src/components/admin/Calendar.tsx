@@ -12,6 +12,7 @@ interface Appointment {
     };
     service: {
         name: string;
+        price: number;
     };
 }
 
@@ -48,7 +49,9 @@ export default function Calendar({ appointments }: CalendarProps) {
 
     // Calculate stats
     const totalBookings = confirmedAppointments.length;
-    const totalRevenue = 0; // Revenue calculation would need price data
+    const totalRevenue = confirmedAppointments.reduce((sum, apt) => {
+        return sum + Number(apt.service.price || 0);
+    }, 0);
 
     const changeMonth = (delta: number) => {
         const newDate = new Date(currentDate);

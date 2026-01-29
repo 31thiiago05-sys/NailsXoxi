@@ -10,7 +10,8 @@ interface Appointment {
     date: string;
     status: string;
     service: {
-        title: string;
+        name?: string;
+        title?: string;
         price: number;
     };
     user?: {
@@ -75,8 +76,14 @@ export default function AdminDashboard() {
         }
 
         return allAppointments.filter(apt => {
-            const aptDate = parseISO(apt.date);
-            return isWithinInterval(aptDate, { start, end });
+            if (!apt.date) return false;
+            try {
+                const aptDate = parseISO(apt.date);
+                return isWithinInterval(aptDate, { start, end });
+            } catch {
+                console.error('Invalid date in appointment:', apt.date);
+                return false;
+            }
         });
     };
 
@@ -84,8 +91,8 @@ export default function AdminDashboard() {
 
     const stats = {
         revenue: filteredAppointments
-            .filter(a => a.status === 'CONFIRMED' || a.status === 'COMPLETED')
-            .reduce((sum, a) => sum + Number(a.service.price), 0),
+            .filter(a => a.status === 'CONFIRMED' || a.status === 'COMPLETED' || a.status === 'Confirmado')
+            .reduce((sum, a) => sum + Number(a.service?.price || 0), 0),
         count: filteredAppointments.length,
     };
 
@@ -211,13 +218,16 @@ export default function AdminDashboard() {
                                         <div className={`w-1 h-12 rounded-full ${apt.status === 'CONFIRMED' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
                                         <div>
                                             <p className="font-semibold text-gray-900">
-                                                {format(parseISO(apt.date), "dd/MM HH:mm", { locale: es })} - {apt.service?.title || 'Servicio'}
+                                                {format(parseISO(apt.date), "dd/MM HH:mm", { locale: es })} - {apt.service?.name || apt.service?.title || 'Servicio'}
                                             </p>
                                             <p className="text-sm text-gray-500">{apt.user?.name || 'Cliente'}</p>
                                         </div>
                                     </div>
-                                    <span className={`px-3 py-1 text-xs font-bold rounded-full ${apt.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                        {apt.status}
+                                    <span className={`px-3 py-1 text-xs font-bold rounded-full ${apt.status === 'CONFIRMED' || apt.status === 'Confirmado' || apt.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                        {apt.status === 'CONFIRMED' || apt.status === 'Confirmado' ? 'Confirmado' :
+                                            apt.status === 'PENDING' || apt.status === 'Pendiente' ? 'Pendiente' :
+                                                apt.status === 'CANCELLED' || apt.status === 'Cancelado' ? 'Cancelado' :
+                                                    apt.status === 'COMPLETED' ? 'Completado' : apt.status}
                                     </span>
                                 </div>
                             ))}

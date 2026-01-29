@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../api';
-import { Loader2, Search, XCircle } from 'lucide-react';
+import { Loader2, Search, XCircle, UserX, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import ConfirmationModal from '../ConfirmationModal';
 import Calendar from './Calendar';
@@ -9,7 +9,7 @@ import '../../styles/responsive-tables.css';
 interface Appointment {
     id: string;
     date: string;
-    time: string;
+    // time: string; // Removed as it is derived from date
     status: string;
     client: {
         id: string;
@@ -17,7 +17,8 @@ interface Appointment {
         phone: string | null;
     };
     service: {
-        title: string;
+        name?: string;
+        title?: string;
         price: number;
     };
 }
@@ -62,15 +63,15 @@ export default function BookingsManager() {
                     id: apt.id,
                     date: apt.date,
                     status: apt.status,
-                    time: new Date(apt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    // time: new Date(apt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), // Removed as it is derived from date
                     client: {
                         id: apt.client?.id || apt.user?.id || 'unknown',
                         name: apt.client?.name || apt.user?.name || 'Cliente Desconocido',
                         phone: apt.client?.phone || apt.user?.phone || '-'
                     },
                     service: {
-                        title: apt.service?.name || apt.service?.title || 'Servicio Desconocido',
-                        price: apt.service?.price || 0
+                        name: apt.service?.name || apt.service?.title || 'Servicio Desconocido',
+                        price: Number(apt.service?.price || 0)
                     }
                 }));
 
@@ -86,13 +87,13 @@ export default function BookingsManager() {
 
 
 
-    const handleAction = (action: 'CANCEL' | 'DELETE' | 'NOSHOW', id: string) => {
+    const handleAction = (action: 'CANCEL' | 'DELETE' | 'NOSHOW', id: string, reason: string = 'Cancelación por administrador') => {
         const title = action === 'DELETE' ? '¿Eliminar turno permanentemente?' :
             action === 'CANCEL' ? '¿Cancelar turno?' : '¿Marcar como ausente?';
 
-        const message = action === 'DELETE' ? 'Esta acción es irreversible.' :
-            action === 'CANCEL' ? 'La clienta será notificada. Si es con menos de 72hs generará deuda.' :
-                'Esto marcará que la clienta no asistió.';
+        const message = action === 'DELETE' ? 'Esta acción es irreversible y eliminará el turno del sistema.' :
+            action === 'CANCEL' ? 'La clienta será notificada. Dependiendo de la política de 72hs, podría generarse deuda.' :
+                'Esto marcará que la clienta no asistió y generará una deuda automática del 50% del valor del servicio.';
 
         setConfirmModal({
             isOpen: true,
@@ -101,7 +102,11 @@ export default function BookingsManager() {
             variant: 'danger',
             onConfirm: async () => {
                 try {
-                    await api.post(`/appointments/${id}/cancel`);
+                    const endpoint = action === 'CANCEL' ? '/appointments/admin/cancel' :
+                        action === 'NOSHOW' ? '/appointments/admin/mark-noshow' :
+                            '/appointments/admin/delete';
+
+                    await api.post(endpoint, { appointmentId: id, reason });
                     fetchAppointments();
                 } catch {
                     alert('Error al procesar acción');
@@ -112,7 +117,7 @@ export default function BookingsManager() {
 
     const filtered = appointments.filter(apt =>
         apt.client?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        apt.service?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        apt.service?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         apt?.date?.includes(searchTerm)
     );
 
@@ -141,7 +146,10 @@ export default function BookingsManager() {
                     date: apt.date,
                     status: apt.status,
                     user: { name: apt.client?.name || 'Cliente Desconocido' },
-                    service: { name: apt.service?.title || 'Servicio Desconocido' }
+                    service: {
+                        name: apt.service?.name || apt.service?.title || 'Servicio Desconocido',
+                        price: Number(apt.service?.price || 0)
+                    }
                 }))} />
             </div>
 
@@ -164,14 +172,14 @@ export default function BookingsManager() {
                                     {format(new Date(apt.date), 'dd/MM/yyyy')}
                                 </td>
                                 <td data-label="Hora" className="p-4 text-sm text-gray-600">
-                                    {apt.time}
+                                    {format(new Date(apt.date), 'HH:mm')}
                                 </td>
                                 <td data-label="Clienta" className="p-4">
                                     <div className="font-medium text-gray-900">{apt.client?.name || 'Cliente Desconocido'}</div>
                                     <div className="text-xs text-gray-500">{apt.client?.phone || '-'}</div>
                                 </td>
                                 <td data-label="Servicio" className="p-4 text-sm text-gray-700">
-                                    {apt.service?.title || 'Servicio Desconocido'}
+                                    {apt.service?.name || 'Servicio Desconocido'}
                                 </td>
                                 <td data-label="Estado" className="p-4">
                                     <span className={`px-2 py-1 rounded-full text-xs font-bold
@@ -184,14 +192,33 @@ export default function BookingsManager() {
                                 </td>
                                 <td data-label="Acciones" className="p-4 flex gap-2">
                                     {apt.status !== 'CANCELLED' && (
-                                        <button
-                                            onClick={() => handleAction('CANCEL', apt.id)}
-                                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"
-                                            title="Cancelar Turno"
-                                        >
-                                            <XCircle size={18} />
-                                        </button>
+                                        <>
+                                            <button
+                                                onClick={() => handleAction('CANCEL', apt.id)}
+                                                className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg flex items-center justify-center"
+                                                title="Cancelar Turno"
+                                            >
+                                                <XCircle size={18} />
+                                                <span className="ml-1 text-[10px] font-bold hidden md:inline">Cancelar</span>
+                                            </button>
+                                            <button
+                                                onClick={() => handleAction('NOSHOW', apt.id)}
+                                                className="p-1.5 text-orange-500 hover:bg-orange-50 rounded-lg flex items-center justify-center"
+                                                title="Marcar Ausente"
+                                            >
+                                                <UserX size={18} />
+                                                <span className="ml-1 text-[10px] font-bold hidden md:inline">Ausente</span>
+                                            </button>
+                                        </>
                                     )}
+                                    <button
+                                        onClick={() => handleAction('DELETE', apt.id)}
+                                        className="p-1.5 text-red-700 hover:bg-red-100 rounded-lg flex items-center justify-center"
+                                        title="Eliminar Turno"
+                                    >
+                                        <Trash2 size={18} />
+                                        <span className="ml-1 text-[10px] font-bold hidden md:inline">Eliminar</span>
+                                    </button>
                                 </td>
                             </tr>
                         ))}
