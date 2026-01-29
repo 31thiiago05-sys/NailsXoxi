@@ -74,7 +74,7 @@ export default function EarningsManager() {
                 .map((a: Appointment) => ({
                     id: a.id,
                     date: a.date,
-                    description: `Servicio: ${a.service?.name || a.service?.title || 'Sin nombre'}`,
+                    description: `Servicio: ${a.service?.name || 'Sin nombre'}`,
                     amount: Number(a.service?.price || 0),
                     type: 'BOOKING',
                     clientName: a.client?.name || 'Cliente'

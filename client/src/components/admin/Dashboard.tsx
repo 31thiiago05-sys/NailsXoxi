@@ -11,7 +11,7 @@ interface Appointment {
     status: string;
     service: {
         name?: string;
-        title?: string;
+        // title?: string; // Removed as it is now 'name'
         price: number;
     };
     user?: {
@@ -218,7 +218,7 @@ export default function AdminDashboard() {
                                         <div className={`w-1 h-12 rounded-full ${apt.status === 'CONFIRMED' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
                                         <div>
                                             <p className="font-semibold text-gray-900">
-                                                {format(parseISO(apt.date), "dd/MM HH:mm", { locale: es })} - {apt.service?.name || apt.service?.title || 'Servicio'}
+                                                {format(parseISO(apt.date), "dd/MM HH:mm", { locale: es })} - {apt.service?.name || 'Servicio'}
                                             </p>
                                             <p className="text-sm text-gray-500">{apt.user?.name || 'Cliente'}</p>
                                         </div>

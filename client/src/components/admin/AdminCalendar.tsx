@@ -13,7 +13,7 @@ interface CalendarAppointment {
     };
     service: {
         name?: string;
-        title?: string;
+        // title?: string; // Removed as it is now 'name'
         price: number;
     };
 }
@@ -181,7 +181,7 @@ export default function AdminCalendar() {
                                             </div>
                                             <div>
                                                 <p className="font-bold text-gray-800">{apt.client?.name || 'Cliente'}</p>
-                                                <p className="text-xs text-gray-500">{apt.service?.name || apt.service?.title || 'Servicio'}</p>
+                                                <p className="text-xs text-gray-500">{apt.service?.name || 'Servicio'}</p>
                                             </div>
                                         </div>
                                         <div className="text-right">

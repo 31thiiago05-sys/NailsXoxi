@@ -9,7 +9,7 @@ interface Appointment {
     date: string;
     status: string;
     service: {
-        title: string;
+        name: string;
         price: number;
         duration: number;
     };
@@ -110,7 +110,7 @@ export default function MyAppointments() {
                                     </div>
 
                                     <div>
-                                        <h3 className="font-bold text-lg text-gray-800">{apt.service.title}</h3>
+                                        <h3 className="font-bold text-lg text-gray-800">{apt.service.name}</h3>
                                         <div className="flex items-center gap-4 text-sm text-gray-500 mt-2">
                                             <div className="flex items-center gap-1">
                                                 <Clock className="w-4 h-4" />

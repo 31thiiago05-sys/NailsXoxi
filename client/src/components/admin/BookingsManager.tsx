@@ -18,7 +18,7 @@ interface Appointment {
     };
     service: {
         name?: string;
-        title?: string;
+        // title?: string; // Removed as it is now 'name'
         price: number;
     };
 }
@@ -53,7 +53,7 @@ export default function BookingsManager() {
                 status: string;
                 client?: { name: string; phone: string | null; id: string };
                 user?: { name: string; phone: string | null; id: string };
-                service?: { name?: string; title?: string; price: number };
+                service?: { name?: string; price: number };
             }
 
             // Map backend structure to frontend structure
@@ -70,7 +70,7 @@ export default function BookingsManager() {
                         phone: apt.client?.phone || apt.user?.phone || '-'
                     },
                     service: {
-                        name: apt.service?.name || apt.service?.title || 'Servicio Desconocido',
+                        name: apt.service?.name || 'Servicio Desconocido',
                         price: Number(apt.service?.price || 0)
                     }
                 }));
@@ -147,7 +147,7 @@ export default function BookingsManager() {
                     status: apt.status,
                     user: { name: apt.client?.name || 'Cliente Desconocido' },
                     service: {
-                        name: apt.service?.name || apt.service?.title || 'Servicio Desconocido',
+                        name: apt.service?.name || 'Servicio Desconocido',
                         price: Number(apt.service?.price || 0)
                     }
                 }))} />
