@@ -86,7 +86,7 @@ Para que Mercado Pago notifique los cambios de estado de pago:
 3. **Ve a** la sección "Webhooks"
 4. **Agrega** la siguiente URL:
 
-   ```
+   ```bash
    https://[TU_SERVIDOR_EN_RENDER]/api/payments/webhook
    ```
 

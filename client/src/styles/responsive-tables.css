@@ -43,7 +43,6 @@
         justify-content: space-between;
         align-items: center;
         text-align: right;
-        min-height: auto;
         word-break: break-word;
         overflow-wrap: break-word;
     }

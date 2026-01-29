@@ -174,19 +174,19 @@ export default function EarningsManager() {
                     <tbody className="divide-y divide-gray-50">
                         {earnings.map(item => (
                             <tr key={item.id} className="hover:bg-gray-50/50">
-                                <td className="p-4 text-sm text-gray-900">
+                                <td data-label="Fecha" className="p-4 text-sm text-gray-900">
                                     {format(new Date(item.date), 'dd/MM/yyyy')}
                                 </td>
-                                <td className="p-4 font-medium text-gray-800">
+                                <td data-label="Concepto" className="p-4 font-medium text-gray-800">
                                     {item.description}
                                 </td>
-                                <td className="p-4 text-sm text-gray-600">
+                                <td data-label="Cliente" className="p-4 text-sm text-gray-600">
                                     {item.clientName || 'Manual'}
                                 </td>
-                                <td className={`p-4 font-bold ${item.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                <td data-label="Monto" className={`p-4 font-bold ${item.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                     ${item.amount.toLocaleString()}
                                 </td>
-                                <td className="p-4">
+                                <td data-label="Acciones" className="p-4">
                                     {item.type === 'ADJUSTMENT' && (
                                         <button
                                             onClick={() => handleDelete(item.id, item.type)}
