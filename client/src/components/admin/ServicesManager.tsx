@@ -181,71 +181,144 @@ export default function ServicesManager() {
                 </button>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <table className="w-full text-left">
-                    <thead className="bg-gray-50 border-b border-gray-200">
-                        <tr>
-                            <th className="px-6 py-4 font-semibold text-gray-600">Nombre</th>
-                            <th className="px-6 py-4 font-semibold text-gray-600">Categoría</th>
-                            <th className="px-6 py-4 font-semibold text-gray-600">Duración</th>
-                            <th className="px-6 py-4 font-semibold text-gray-600">Precio</th>
-                            <th className="px-6 py-4 font-semibold text-gray-600 text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {services.map((service) => (
-                            <tr key={service.id} className="hover:bg-gray-50/50">
-                                <td className="px-6 py-4 font-medium text-gray-900 flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden border shrink-0">
-                                        {service.images && service.images.length > 0 ? (
-                                            <img src={service.images[0]} alt={service.name} className="w-full h-full object-cover" />
-                                        ) : service.imageUrl ? (
-                                            <img src={service.imageUrl} alt={service.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-gray-300">
-                                                <ImageIcon size={20} />
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span>{service.name}</span>
-                                        {service.images && service.images.length > 1 && (
-                                            <span className="text-xs text-primary font-medium">{service.images.length} fotos</span>
-                                        )}
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-gray-500">{getCategoryName(service.categoryId)}</td>
-                                <td className="px-6 py-4 text-gray-500">{service.durationMin} min</td>
-                                <td className="px-6 py-4 font-medium text-gray-900">${service.price}</td>
-                                <td className="px-6 py-4 text-right">
-                                    <div className="flex items-center justify-end gap-2">
-                                        <button
-                                            onClick={() => handleOpenModal(service)}
-                                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                            aria-label={`Editar servicio ${service.name}`}
-                                        >
-                                            <Edit2 size={18} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(service.id)}
-                                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                            aria-label={`Eliminar servicio ${service.name}`}
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                        {services.length === 0 && !loading && (
-                            <tr>
-                                <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                                    No hay servicios cargados.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
+            <div className="space-y-8">
+                {categories.map(category => {
+                    const categoryServices = services.filter(s => s.categoryId === category.id);
+                    if (categoryServices.length === 0) return null;
+
+                    return (
+                        <div key={category.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+                                <h3 className="text-lg font-bold text-gray-800">{category.name}</h3>
+                            </div>
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50/50 border-b border-gray-200">
+                                    <tr>
+                                        <th className="px-6 py-3 font-semibold text-gray-600 text-sm">Nombre</th>
+                                        <th className="px-6 py-3 font-semibold text-gray-600 text-sm">Duración</th>
+                                        <th className="px-6 py-3 font-semibold text-gray-600 text-sm">Precio</th>
+                                        <th className="px-6 py-3 font-semibold text-gray-600 text-sm text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {categoryServices.map((service) => (
+                                        <tr key={service.id} className="hover:bg-gray-50/50">
+                                            <td className="px-6 py-4 font-medium text-gray-900 flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden border shrink-0">
+                                                    {service.images && service.images.length > 0 ? (
+                                                        <img src={service.images[0]} alt={service.name} className="w-full h-full object-cover" />
+                                                    ) : service.imageUrl ? (
+                                                        <img src={service.imageUrl} alt={service.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                                            <ImageIcon size={20} />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span>{service.name}</span>
+                                                    {service.images && service.images.length > 1 && (
+                                                        <span className="text-xs text-primary font-medium">{service.images.length} fotos</span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-500">{service.durationMin} min</td>
+                                            <td className="px-6 py-4 font-medium text-gray-900">${service.price}</td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button
+                                                        onClick={() => handleOpenModal(service)}
+                                                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        aria-label={`Editar servicio ${service.name}`}
+                                                    >
+                                                        <Edit2 size={18} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(service.id)}
+                                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        aria-label={`Eliminar servicio ${service.name}`}
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    );
+                })}
+
+                {/* Servicios sin categoría o huérfanos */}
+                {(() => {
+                    const orphanServices = services.filter(s => !categories.find(c => c.id === s.categoryId));
+                    if (orphanServices.length === 0) return null;
+
+                    return (
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-8 border-l-4 border-l-yellow-400">
+                            <div className="bg-yellow-50 border-b border-yellow-100 px-6 py-3">
+                                <h3 className="text-lg font-bold text-yellow-800">Sin Categoría / Otros</h3>
+                            </div>
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50 border-b border-gray-200">
+                                    <tr>
+                                        <th className="px-6 py-3 font-semibold text-gray-600 text-sm">Nombre</th>
+                                        <th className="px-6 py-3 font-semibold text-gray-600 text-sm">Duración</th>
+                                        <th className="px-6 py-3 font-semibold text-gray-600 text-sm">Precio</th>
+                                        <th className="px-6 py-3 font-semibold text-gray-600 text-sm text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {orphanServices.map((service) => (
+                                        <tr key={service.id} className="hover:bg-gray-50/50">
+                                            <td className="px-6 py-4 font-medium text-gray-900 flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden border shrink-0">
+                                                    {service.images && service.images.length > 0 ? (
+                                                        <img src={service.images[0]} alt={service.name} className="w-full h-full object-cover" />
+                                                    ) : service.imageUrl ? (
+                                                        <img src={service.imageUrl} alt={service.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                                            <ImageIcon size={20} />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span>{service.name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-500">{service.durationMin} min</td>
+                                            <td className="px-6 py-4 font-medium text-gray-900">${service.price}</td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button
+                                                        onClick={() => handleOpenModal(service)}
+                                                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    >
+                                                        <Edit2 size={18} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(service.id)}
+                                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    );
+                })()}
+
+                {services.length === 0 && !loading && (
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center text-gray-500">
+                        No hay servicios cargados.
+                    </div>
+                )}
             </div>
 
             {/* Modal */}
