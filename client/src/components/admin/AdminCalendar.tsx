@@ -81,9 +81,17 @@ export default function AdminCalendar() {
                                 {weekDays.map(day => {
                                     // Buscar turno en este día y hora
                                     const appt = appointments.find(a => {
-                                        const apptDate = parseISO(a.date);
-                                        const apptHour = parseInt(a.time.split(':')[0]);
-                                        return isSameDay(apptDate, day) && apptHour === hour;
+                                        if (!a.date || !a.time) return false;
+                                        // Ignore PENDING and CANCELLED
+                                        if (a.status === 'PENDING' || a.status === 'CANCELLED') return false;
+
+                                        try {
+                                            const apptDate = parseISO(a.date);
+                                            const apptHour = parseInt(a.time.split(':')[0]);
+                                            return isSameDay(apptDate, day) && apptHour === hour;
+                                        } catch {
+                                            return false;
+                                        }
                                     });
 
                                     return (

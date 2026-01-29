@@ -31,8 +31,15 @@ export default function BookingsManager() {
     const fetchAppointments = async () => {
         try {
             const { data } = await api.get('/appointments');
+
+            // Map backend 'user' to frontend 'client' structure if needed
+            const mappedData = data.map((apt: any) => ({
+                ...apt,
+                client: apt.client || apt.user || { name: 'Cliente Desconocido', phone: '-' }
+            }));
+
             // Show recent first
-            setAppointments(data.sort((a: Appointment, b: Appointment) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+            setAppointments(mappedData.sort((a: Appointment, b: Appointment) => new Date(b.date).getTime() - new Date(a.date).getTime()));
         } catch {
             // Ignore error
         } finally {
@@ -63,9 +70,9 @@ export default function BookingsManager() {
     };
 
     const filtered = appointments.filter(apt =>
-        apt.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        apt.service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        apt.date.includes(searchTerm)
+        apt.client?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        apt.service?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        apt?.date?.includes(searchTerm)
     );
 
     if (loading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin text-primary" /></div>;
@@ -108,11 +115,11 @@ export default function BookingsManager() {
                                     {apt.time}
                                 </td>
                                 <td className="p-4">
-                                    <div className="font-medium text-gray-900">{apt.client.name}</div>
-                                    <div className="text-xs text-gray-500">{apt.client.phone || '-'}</div>
+                                    <div className="font-medium text-gray-900">{apt.client?.name || 'Cliente Desconocido'}</div>
+                                    <div className="text-xs text-gray-500">{apt.client?.phone || '-'}</div>
                                 </td>
                                 <td className="p-4 text-sm text-gray-700">
-                                    {apt.service.title}
+                                    {apt.service?.title || 'Servicio Desconocido'}
                                 </td>
                                 <td className="p-4">
                                     <span className={`px-2 py-1 rounded-full text-xs font-bold
