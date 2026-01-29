@@ -3,6 +3,7 @@ import api from '../../api';
 import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import ConfirmationModal from '../ConfirmationModal';
+import '../../styles/responsive-tables.css';
 
 interface EarningItem {
     id: string;

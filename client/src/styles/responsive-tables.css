@@ -1,0 +1,88 @@
+/* Responsive Tables for Mobile */
+@media (max-width: 768px) {
+
+    /* Transform table to cards */
+    table,
+    thead,
+    tbody,
+    th,
+    td,
+    tr {
+        display: block;
+    }
+
+    table {
+        min-width: 0 !important;
+        width: 100%;
+    }
+
+    /* Hide table headers */
+    thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    /* Style each row as a card */
+    tr {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 15px;
+        padding: 15px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    /* Style table cells */
+    td {
+        border: none;
+        border-bottom: 1px solid #f0f0f0;
+        position: relative;
+        padding: 12px 0 !important;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+        min-height: auto;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+
+    td:last-child {
+        border-bottom: none;
+    }
+
+    /* Add labels before each cell */
+    td:before {
+        position: static;
+        width: auto;
+        padding-right: 15px;
+        white-space: nowrap;
+        content: attr(data-label);
+        font-weight: 600;
+        text-align: left;
+        color: #d4af37;
+        font-size: 0.95rem;
+    }
+
+    /* Special styling for action buttons */
+    td[data-label="Acciones"]:before,
+    td[data-label="Actions"]:before {
+        display: none;
+    }
+
+    td[data-label="Acciones"],
+    td[data-label="Actions"] {
+        justify-content: center;
+        padding-top: 15px !important;
+        margin-top: 5px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    /* Ensure buttons wrap properly */
+    td[data-label="Acciones"] button,
+    td[data-label="Actions"] button {
+        margin: 0 !important;
+    }
+}

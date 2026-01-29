@@ -3,6 +3,7 @@ import api from '../../api';
 import { Loader2, Search, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import ConfirmationModal from '../ConfirmationModal';
+import '../../styles/responsive-tables.css';
 
 interface Appointment {
     id: string;
@@ -147,20 +148,20 @@ export default function BookingsManager() {
                     <tbody className="divide-y divide-gray-50">
                         {filtered.map(apt => (
                             <tr key={apt.id} className="hover:bg-gray-50/50">
-                                <td className="p-4 text-sm font-medium text-gray-900">
+                                <td data-label="Fecha" className="p-4 text-sm font-medium text-gray-900">
                                     {format(new Date(apt.date), 'dd/MM/yyyy')}
                                 </td>
-                                <td className="p-4 text-sm text-gray-600">
+                                <td data-label="Hora" className="p-4 text-sm text-gray-600">
                                     {apt.time}
                                 </td>
-                                <td className="p-4">
+                                <td data-label="Clienta" className="p-4">
                                     <div className="font-medium text-gray-900">{apt.client?.name || 'Cliente Desconocido'}</div>
                                     <div className="text-xs text-gray-500">{apt.client?.phone || '-'}</div>
                                 </td>
-                                <td className="p-4 text-sm text-gray-700">
+                                <td data-label="Servicio" className="p-4 text-sm text-gray-700">
                                     {apt.service?.title || 'Servicio Desconocido'}
                                 </td>
-                                <td className="p-4">
+                                <td data-label="Estado" className="p-4">
                                     <span className={`px-2 py-1 rounded-full text-xs font-bold
                                         ${apt.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
                                             apt.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
@@ -169,7 +170,7 @@ export default function BookingsManager() {
                                         {apt.status === 'CONFIRMED' ? 'Confirmado' : apt.status === 'PENDING' ? 'Pendiente' : 'Cancelado'}
                                     </span>
                                 </td>
-                                <td className="p-4 flex gap-2">
+                                <td data-label="Acciones" className="p-4 flex gap-2">
                                     {apt.status !== 'CANCELLED' && (
                                         <button
                                             onClick={() => handleAction('CANCEL', apt.id)}

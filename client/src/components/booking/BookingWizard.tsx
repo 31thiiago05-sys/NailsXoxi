@@ -242,14 +242,14 @@ export default function BookingWizard() {
                         </button>
 
                         <h2 className="text-xl md:text-2xl font-bold text-brand-dark mb-6 text-center">¿Qué te gustaría hacerte hoy?</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 md:gap-4">
                             {categories.map(cat => (
                                 <button
                                     key={cat.id}
                                     onClick={() => { setSelectedCategory(cat.id); handleNext(); }}
-                                    className="group relative overflow-hidden p-6 rounded-2xl border-2 border-transparent bg-white hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 flex flex-col items-center justify-center gap-3 text-center aspect-[3/2] sm:aspect-[4/3] shadow-sm"
+                                    className="group relative overflow-hidden p-4 md:p-6 rounded-2xl border-2 border-transparent bg-white hover:border-primary/50 hover:border-primary/5 transition-all duration-300 flex flex-col items-center justify-center gap-2 md:gap-3 text-center aspect-[4/3] sm:aspect-[4/3] shadow-sm"
                                 >
-                                    <span className="font-bold text-lg text-brand-dark group-hover:text-primary transition-colors">{cat.name}</span>
+                                    <span className="font-bold text-base md:text-lg text-brand-dark group-hover:text-primary transition-colors">{cat.name}</span>
                                     <div className="w-8 h-1 bg-primary/20 rounded-full group-hover:w-16 group-hover:bg-primary transition-all duration-300" />
                                 </button>
                             ))}

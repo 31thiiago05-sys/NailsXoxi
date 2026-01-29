@@ -141,14 +141,14 @@ export default function LandingPage() {
 
             {/* Features / Info Grid */}
             <section className="px-6 py-24 bg-white relative">
-                <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 justify-center">
+                <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 justify-center">
                     {/* Calidad Premium */}
-                    <div className="group p-8 md:p-10 rounded-3xl bg-white hover:bg-white border text-center transition-all duration-300 border-transparent hover:border-secondary/20 hover:shadow-xl">
-                        <div className="w-16 h-16 bg-background text-accent rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm group-hover:scale-110 group-hover:text-brand-dark transition-all duration-300 border border-secondary/20">
-                            <Star size={32} strokeWidth={1.5} />
+                    <div className="group p-6 md:p-10 rounded-3xl bg-white hover:bg-white border text-center transition-all duration-300 border-transparent hover:border-secondary/20 hover:shadow-xl">
+                        <div className="w-12 h-12 md:w-16 md:h-16 bg-background text-accent rounded-2xl flex items-center justify-center mx-auto mb-4 md:mb-6 shadow-sm group-hover:scale-110 group-hover:text-brand-dark transition-all duration-300 border border-secondary/20">
+                            <Star size={24} className="md:w-8 md:h-8" strokeWidth={1.5} />
                         </div>
-                        <h3 className="font-bold text-xl mb-3 text-brand-dark">Calidad Premium</h3>
-                        <p className="text-gray-500 leading-relaxed">Usamos solo productos importados de primera línea para cuidar la salud de tus uñas.</p>
+                        <h3 className="font-bold text-lg md:text-xl mb-2 md:mb-3 text-brand-dark">Calidad Premium</h3>
+                        <p className="text-sm md:text-base text-gray-500 leading-relaxed">Usamos solo productos importados de primera línea para cuidar la salud de tus uñas.</p>
                     </div>
 
                     {/* Diseños Únicos - Instagram Link */}
@@ -156,16 +156,16 @@ export default function LandingPage() {
                         href="https://www.instagram.com/nails.xoxi/"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group p-8 md:p-10 rounded-3xl bg-white hover:bg-white border text-center transition-all duration-300 border-transparent hover:border-secondary/20 hover:shadow-xl block"
+                        className="group p-6 md:p-10 rounded-3xl bg-white hover:bg-white border text-center transition-all duration-300 border-transparent hover:border-secondary/20 hover:shadow-xl block"
                     >
-                        <div className="w-16 h-16 bg-background text-accent rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm group-hover:scale-110 group-hover:text-brand-dark transition-all duration-300 border border-secondary/20">
-                            <Instagram size={32} strokeWidth={1.5} />
+                        <div className="w-12 h-12 md:w-16 md:h-16 bg-background text-accent rounded-2xl flex items-center justify-center mx-auto mb-4 md:mb-6 shadow-sm group-hover:scale-110 group-hover:text-brand-dark transition-all duration-300 border border-secondary/20">
+                            <Instagram size={24} className="md:w-8 md:h-8" strokeWidth={1.5} />
                         </div>
-                        <h3 className="font-bold text-xl mb-3 text-brand-dark flex items-center justify-center gap-2">
+                        <h3 className="font-bold text-lg md:text-xl mb-2 md:mb-3 text-brand-dark flex items-center justify-center gap-2">
                             Diseños Únicos
                             <span className="text-xs bg-accent/10 text-accent px-2 py-1 rounded-full">Ver más</span>
                         </h3>
-                        <p className="text-gray-500 leading-relaxed">Traé tu idea o dejate asesorar. Hacemos realidad el diseño que imaginás.</p>
+                        <p className="text-sm md:text-base text-gray-500 leading-relaxed">Traé tu idea o dejate asesorar. Hacemos realidad el diseño que imaginás.</p>
                     </a>
                 </div>
             </section>
