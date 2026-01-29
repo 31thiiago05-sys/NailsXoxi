@@ -4,6 +4,7 @@ import prisma from '../db';
 export const getServices = async (req: Request, res: Response) => {
     try {
         const services = await prisma.service.findMany({
+            where: { deletedAt: null },
             include: { category: true }
         });
 
@@ -175,9 +176,16 @@ export const updateService = async (req: Request, res: Response) => {
 export const deleteService = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        await prisma.service.delete({ where: { id } });
+
+        // Soft Delete: Just update timestamp
+        await prisma.service.update({
+            where: { id },
+            data: { deletedAt: new Date() }
+        });
+
         res.json({ success: true });
     } catch (error) {
+        console.error('Error deleting service:', error);
         res.status(500).json({ error: 'Error deleting service' });
     }
 }

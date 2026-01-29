@@ -40,6 +40,26 @@ app.get('/', (req, res) => {
     res.send('Nails Xoxi API Running');
 });
 
+// Keep-Alive Mechanism for Render Free Tier
+const keepAlive = () => {
+    const url = process.env.PUBLIC_URL || 'https://nailsxoxi-xo1c.onrender.com';
+    // Ping every 14 minutes (840000 ms) to prevent sleep (Render sleeps after 15m)
+    setInterval(async () => {
+        try {
+            console.log(`Keep-alive ping to ${url}...`);
+            const response = await fetch(url);
+            console.log(`Keep-alive status: ${response.status}`);
+        } catch (error) {
+            console.error('Keep-alive ping failed:', error);
+        }
+    }, 840000);
+};
+
+// Start keep-alive in production
+if (process.env.NODE_ENV === 'production' || process.env.PUBLIC_URL) {
+    keepAlive();
+}
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

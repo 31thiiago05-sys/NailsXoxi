@@ -42,20 +42,39 @@ export default function BookingsManager() {
         try {
             const { data } = await api.get('/appointments');
 
+            // Definir estructura para tipeado estricto
+            // Definir estructura para tipeado estricto
+            interface RawAppointment {
+                id: string;
+                date: string;
+                status: string;
+                client?: { name: string; phone: string | null; id: string };
+                user?: { name: string; phone: string | null; id: string };
+                service?: { name?: string; title?: string; price: number };
+            }
+
             // Map backend structure to frontend structure
-            const mappedData = data
-                .filter((apt: any) => apt.status !== 'PENDING') // Explicitly exclude PENDING
-                .map((apt: any) => ({
-                    ...apt,
-                    client: apt.client || apt.user || { name: 'Cliente Desconocido', phone: '-' },
+            const mappedData: Appointment[] = (data as RawAppointment[])
+                .filter((apt) => apt.status !== 'PENDING') // Explicitly exclude PENDING
+                .map((apt) => ({
+                    id: apt.id,
+                    date: apt.date,
+                    status: apt.status,
+                    time: new Date(apt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    client: {
+                        id: apt.client?.id || apt.user?.id || 'unknown',
+                        name: apt.client?.name || apt.user?.name || 'Cliente Desconocido',
+                        phone: apt.client?.phone || apt.user?.phone || '-'
+                    },
                     service: {
-                        ...apt.service,
-                        title: apt.service?.name || apt.service?.title || 'Servicio Desconocido'
+                        title: apt.service?.name || apt.service?.title || 'Servicio Desconocido',
+                        price: apt.service?.price || 0
                     }
                 }));
 
             // Show recent first
-            setAppointments(mappedData.sort((a: Appointment, b: Appointment) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+            // Show recent first
+            setAppointments(mappedData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
         } catch {
             // Ignore error
         } finally {

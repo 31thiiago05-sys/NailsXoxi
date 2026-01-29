@@ -31,6 +31,7 @@ model User {
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime? // Soft delete
 
   appointments Appointment[]
 }
@@ -55,6 +56,8 @@ model Service {
   removalPriceOwn     Decimal  @default(0) // Retiro (Propio)
   removalPriceForeign Decimal  @default(0) // Retiro (Ajeno)
   
+  deletedAt           DateTime? // Soft delete
+
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
   

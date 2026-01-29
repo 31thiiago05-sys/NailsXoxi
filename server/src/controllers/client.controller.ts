@@ -4,7 +4,10 @@ import prisma from '../db';
 export const getAllClients = async (req: Request, res: Response) => {
     try {
         const clients = await prisma.user.findMany({
-            where: { role: 'CLIENT' },
+            where: {
+                role: 'CLIENT',
+                deletedAt: null
+            },
             select: {
                 id: true,
                 name: true,
@@ -33,9 +36,23 @@ export const getAllClients = async (req: Request, res: Response) => {
 export const deleteUser = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        await prisma.user.delete({ where: { id } });
-        res.json({ message: 'Usuario eliminado' });
+
+        // Fetch user first to get email
+        const user = await prisma.user.findUnique({ where: { id } });
+        if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+        // Soft Delete: Update timestamp and rename email to allow reuse
+        await prisma.user.update({
+            where: { id },
+            data: {
+                deletedAt: new Date(),
+                email: `deleted_${Date.now()}_${user.email}`
+            }
+        });
+
+        res.json({ message: 'Usuario eliminado correctamente' });
     } catch (error) {
+        console.error('Error deleting user:', error);
         res.status(500).json({ message: 'Error eliminando usuario' });
     }
 };
