@@ -47,36 +47,86 @@ export const createPreference = async (req: Request, res: Response) => {
 };
 
 export const receiveWebhook = async (req: Request, res: Response) => {
-    const { type, data } = req.body;
-
     try {
-        if (type === 'payment') {
-            const paymentClient = new Payment(client);
-            const paymentInfo = await paymentClient.get({ id: data.id });
+        // Log para debugging
+        console.log('Webhook recibido:', JSON.stringify(req.body, null, 2));
 
-            if (paymentInfo.status === 'approved') {
-                const appointmentId = paymentInfo.metadata.appointment_id;
+        const { type, data, action } = req.body;
 
-                // 1. Guardar el pago en DB
-                await prisma.payment.create({
-                    data: {
-                        mpPaymentId: paymentInfo.id!.toString(),
-                        mpStatus: paymentInfo.status,
-                        amount: paymentInfo.transaction_amount!,
-                        appointmentId: appointmentId
-                    }
-                });
+        // Mercado Pago siempre envía un tipo de notificación
+        // Respondemos 200 OK primero para que MP no reintente
+        // Luego procesamos en background
 
-                // 2. Confirmar el turno
-                await prisma.appointment.update({
-                    where: { id: appointmentId },
-                    data: { status: 'CONFIRMED' }
-                });
-            }
+        if (!data || !data.id) {
+            console.log('Webhook sin data.id, ignorando');
+            return res.sendStatus(200);
         }
-        res.sendStatus(200);
+
+        // Solo procesar notificaciones de pago
+        if (type === 'payment') {
+            // Procesar en background para no hacer esperar a MP
+            setImmediate(async () => {
+                try {
+                    const paymentClient = new Payment(client);
+                    const paymentInfo = await paymentClient.get({ id: data.id });
+
+                    console.log('Payment info:', {
+                        id: paymentInfo.id,
+                        status: paymentInfo.status,
+                        metadata: paymentInfo.metadata
+                    });
+
+                    // Obtener appointmentId del metadata
+                    const appointmentId = paymentInfo.metadata?.appointment_id as string | undefined;
+
+                    if (!appointmentId) {
+                        console.error('No appointment_id en metadata');
+                        return;
+                    }
+
+                    if (paymentInfo.status === 'approved') {
+                        // 1. Verificar si el pago ya existe
+                        const existingPayment = await prisma.payment.findUnique({
+                            where: { mpPaymentId: paymentInfo.id!.toString() }
+                        });
+
+                        if (!existingPayment) {
+                            // 2. Guardar el pago en DB
+                            await prisma.payment.create({
+                                data: {
+                                    mpPaymentId: paymentInfo.id!.toString(),
+                                    mpStatus: paymentInfo.status,
+                                    amount: paymentInfo.transaction_amount!,
+                                    appointmentId: appointmentId
+                                }
+                            });
+                            console.log('Pago guardado en BD');
+                        }
+
+                        // 3. Confirmar el turno
+                        await prisma.appointment.update({
+                            where: { id: appointmentId },
+                            data: { status: 'CONFIRMED' }
+                        });
+                        console.log('Turno confirmado:', appointmentId);
+                    } else if (paymentInfo.status === 'rejected') {
+                        console.log('Pago rechazado:', paymentInfo.id);
+                        // Podrías actualizar el turno a CANCELLED si querés
+                    } else if (paymentInfo.status === 'in_process') {
+                        console.log('Pago en proceso:', paymentInfo.id);
+                        // El turno queda PENDING hasta que se apruebe
+                    }
+                } catch (error) {
+                    console.error('Error procesando pago en background:', error);
+                }
+            });
+        }
+
+        // SIEMPRE responder 200 OK a Mercado Pago
+        return res.sendStatus(200);
     } catch (error) {
-        console.error(error);
-        res.sendStatus(500);
+        console.error('Error en webhook:', error);
+        // Incluso con error, responder 200 para que MP no reintente
+        return res.sendStatus(200);
     }
 };
