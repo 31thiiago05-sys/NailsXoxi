@@ -52,7 +52,7 @@ export const login = async (req: Request, res: Response) => {
         }
 
         // Verificar si está bloqueado o eliminado (también chequeado en middleware, pero útil aquí para mensaje específico)
-        if (user.isBlocked || user.deletedAt) {
+        if (user.isBlocked || (user as any).deletedAt) {
             return res.status(403).json({ message: 'Cuenta bloqueada o eliminada' });
         }
 
@@ -98,7 +98,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
             data: {
                 resetToken: token,
                 resetTokenExpiry: expiry
-            }
+            } as any
         });
 
         const resetLink = `${process.env.CLIENT_URL || 'https://nails-xoxi.vercel.app'}/reset-password?token=${token}`;
@@ -125,7 +125,7 @@ export const resetPassword = async (req: Request, res: Response) => {
             where: {
                 resetToken: token,
                 resetTokenExpiry: { gt: new Date() }
-            }
+            } as any
         });
 
         if (!user) {
@@ -140,7 +140,7 @@ export const resetPassword = async (req: Request, res: Response) => {
                 password: hashedPassword,
                 resetToken: null,
                 resetTokenExpiry: null
-            }
+            } as any
         });
 
         res.json({ message: 'Contraseña actualizada correctamente' });
@@ -150,3 +150,4 @@ export const resetPassword = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Error al restablecer contraseña' });
     }
 };
+
