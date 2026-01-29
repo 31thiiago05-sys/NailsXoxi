@@ -3,7 +3,6 @@ import api from '../../api';
 import { Loader2, Search, XCircle, UserX, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import ConfirmationModal from '../ConfirmationModal';
-import Calendar from './Calendar';
 import '../../styles/responsive-tables.css';
 
 interface Appointment {
@@ -139,19 +138,7 @@ export default function BookingsManager() {
                 </div>
             </div>
 
-            {/* Calendar View */}
-            <div className="mb-8">
-                <Calendar appointments={appointments.map(apt => ({
-                    id: apt.id,
-                    date: apt.date,
-                    status: apt.status,
-                    user: { name: apt.client?.name || 'Cliente Desconocido' },
-                    service: {
-                        name: apt.service?.name || 'Servicio Desconocido',
-                        price: Number(apt.service?.price || 0)
-                    }
-                }))} />
-            </div>
+
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden overflow-x-auto">
                 <table className="w-full min-w-[800px]">
