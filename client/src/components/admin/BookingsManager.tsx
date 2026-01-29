@@ -32,11 +32,17 @@ export default function BookingsManager() {
         try {
             const { data } = await api.get('/appointments');
 
-            // Map backend 'user' to frontend 'client' structure if needed
-            const mappedData = data.map((apt: any) => ({
-                ...apt,
-                client: apt.client || apt.user || { name: 'Cliente Desconocido', phone: '-' }
-            }));
+            // Map backend structure to frontend structure
+            const mappedData = data
+                .filter((apt: any) => apt.status !== 'PENDING') // Explicitly exclude PENDING
+                .map((apt: any) => ({
+                    ...apt,
+                    client: apt.client || apt.user || { name: 'Cliente Desconocido', phone: '-' },
+                    service: {
+                        ...apt.service,
+                        title: apt.service?.name || apt.service?.title || 'Servicio Desconocido'
+                    }
+                }));
 
             // Show recent first
             setAppointments(mappedData.sort((a: Appointment, b: Appointment) => new Date(b.date).getTime() - new Date(a.date).getTime()));
