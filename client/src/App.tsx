@@ -13,6 +13,8 @@ import EarningsManager from './components/admin/EarningsManager';
 import MyAppointments from './components/client/MyAppointments';
 import LoginPage from './components/auth/LoginPage';
 import RegisterPage from './components/auth/RegisterPage';
+import ForgotPasswordPage from './components/auth/ForgotPasswordPage';
+import ResetPasswordPage from './components/auth/ResetPasswordPage';
 import PoliciesPage from './pages/PoliciesPage';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFailure from './pages/PaymentFailure';
@@ -29,6 +31,8 @@ function App() {
           <Route path="/policies" element={<PoliciesPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           <Route path="/booking" element={
             <div className="min-h-screen bg-gray-50 py-10">

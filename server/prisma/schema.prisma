@@ -32,6 +32,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   deletedAt DateTime? // Soft delete
+  
+  // Password Recovery
+  resetToken       String?
+  resetTokenExpiry DateTime?
 
   appointments Appointment[]
 }

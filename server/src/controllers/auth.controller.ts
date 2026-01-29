@@ -1,13 +1,16 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
 import prisma from '../db';
+import { sendEmail } from '../utils/email'; // Importar funcion de envio corregida
 
 const SECRET = process.env.JWT_SECRET || 'secret';
 
 export const register = async (req: Request, res: Response) => {
     try {
-        const { email, password, name, phone } = req.body;
+        const { password, name, phone } = req.body;
+        const email = req.body.email.toLowerCase(); // Normalizar email
 
         // Verificar si existe
         const existing = await prisma.user.findUnique({ where: { email } });
@@ -40,11 +43,17 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
     try {
-        const { email, password } = req.body;
+        const { password } = req.body;
+        const email = req.body.email.toLowerCase(); // Normalizar email
 
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) {
             return res.status(400).json({ message: 'Credenciales inválidas' });
+        }
+
+        // Verificar si está bloqueado o eliminado (también chequeado en middleware, pero útil aquí para mensaje específico)
+        if (user.isBlocked || user.deletedAt) {
+            return res.status(403).json({ message: 'Cuenta bloqueada o eliminada' });
         }
 
         const valid = await bcrypt.compare(password, user.password);
@@ -68,5 +77,76 @@ export const login = async (req: Request, res: Response) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error en login' });
+    }
+};
+
+export const forgotPassword = async (req: Request, res: Response) => {
+    try {
+        const email = req.body.email.toLowerCase();
+
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) {
+            // No revelar si el usuario existe o no por seguridad, o devolver 404 si prefieres UX sobre seguridad estricta
+            return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+
+        const token = uuidv4();
+        const expiry = new Date(Date.now() + 3600000); // 1 hora
+
+        await prisma.user.update({
+            where: { email },
+            data: {
+                resetToken: token,
+                resetTokenExpiry: expiry
+            }
+        });
+
+        const resetLink = `${process.env.PUBLIC_URL || 'https://nailsxoxi-xo1c.onrender.com'}/reset-password?token=${token}`;
+
+        await sendEmail({
+            to: email,
+            subject: 'Recuperación de contraseña - Nails Xoxi',
+            text: `Hola ${user.name},\n\nPara restablecer tu contraseña, hacé click en el siguiente enlace:\n\n${resetLink}\n\nEste enlace expira en 1 hora.\n\nSi no solicitaste esto, ignorá este mensaje.`
+        });
+
+        res.json({ message: 'Correo de recuperación enviado' });
+
+    } catch (error) {
+        console.error('Error forgot password:', error);
+        res.status(500).json({ message: 'Error al procesar solicitud' });
+    }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        const user = await prisma.user.findFirst({
+            where: {
+                resetToken: token,
+                resetTokenExpiry: { gt: new Date() }
+            }
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: 'Token inválido o expirado' });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                password: hashedPassword,
+                resetToken: null,
+                resetTokenExpiry: null
+            }
+        });
+
+        res.json({ message: 'Contraseña actualizada correctamente' });
+
+    } catch (error) {
+        console.error('Error reset password:', error);
+        res.status(500).json({ message: 'Error al restablecer contraseña' });
     }
 };
