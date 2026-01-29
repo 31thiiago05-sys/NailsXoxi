@@ -27,15 +27,16 @@ export default function PaymentFailure() {
                 </p>
 
                 {/* Payment Details */}
-                {(paymentId || status) && (
+                {/* Payment Details - Only show if valid values exist */}
+                {((paymentId && paymentId !== 'null') || (status && status !== 'null')) && (
                     <div className="bg-gray-50 rounded-xl p-4 mb-6 space-y-3">
-                        {status && (
+                        {status && status !== 'null' && (
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-gray-500">Estado:</span>
                                 <span className="font-bold text-red-600 capitalize">{status}</span>
                             </div>
                         )}
-                        {paymentId && (
+                        {paymentId && paymentId !== 'null' && (
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-gray-500">ID de Pago:</span>
                                 <span className="font-mono text-xs text-gray-700">{paymentId}</span>

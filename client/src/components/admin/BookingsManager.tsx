@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../api';
 import { Loader2, Search, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
+import ConfirmationModal from '../ConfirmationModal';
 
 interface Appointment {
     id: string;
@@ -23,6 +24,15 @@ export default function BookingsManager() {
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Confirmation Modal State
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        variant: 'danger' as 'danger' | 'info' | 'warning'
+    });
 
     useEffect(() => {
         fetchAppointments();
@@ -53,26 +63,30 @@ export default function BookingsManager() {
         }
     };
 
-    const handleAction = async (action: 'CANCEL' | 'DELETE' | 'NOSHOW', id: string) => {
-        const confirmMsg = action === 'DELETE' ? '¿Eliminar turno permanentemente?' :
-            action === 'CANCEL' ? '¿Cancelar turno? Generará deuda si es < 72hs.' :
-                '¿Marcar como ausente?';
 
-        if (!window.confirm(confirmMsg)) return;
 
-        try {
-            if (action === 'DELETE') {
-                // Not standard endpoint yet, maybe should add?
-                // For now reusing cancel if delete doesn't exist, but legacy had delete.
-                // Assuming cancel for now as safer.
-                await api.post(`/appointments/${id}/cancel`);
-            } else if (action === 'CANCEL') {
-                await api.post(`/appointments/${id}/cancel`);
+    const handleAction = (action: 'CANCEL' | 'DELETE' | 'NOSHOW', id: string) => {
+        const title = action === 'DELETE' ? '¿Eliminar turno permanentemente?' :
+            action === 'CANCEL' ? '¿Cancelar turno?' : '¿Marcar como ausente?';
+
+        const message = action === 'DELETE' ? 'Esta acción es irreversible.' :
+            action === 'CANCEL' ? 'La clienta será notificada. Si es con menos de 72hs generará deuda.' :
+                'Esto marcará que la clienta no asistió.';
+
+        setConfirmModal({
+            isOpen: true,
+            title,
+            message,
+            variant: 'danger',
+            onConfirm: async () => {
+                try {
+                    await api.post(`/appointments/${id}/cancel`);
+                    fetchAppointments();
+                } catch {
+                    alert('Error al procesar acción');
+                }
             }
-            fetchAppointments();
-        } catch {
-            alert('Error al procesar acción');
-        }
+        });
     };
 
     const filtered = appointments.filter(apt =>
@@ -152,6 +166,14 @@ export default function BookingsManager() {
                     </tbody>
                 </table>
             </div>
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                variant={confirmModal.variant}
+            />
         </div>
     );
 }

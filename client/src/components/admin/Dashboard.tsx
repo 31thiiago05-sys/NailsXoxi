@@ -44,7 +44,9 @@ export default function AdminDashboard() {
             ]);
 
             setTotalClients(usersRes.data.length);
-            setAllAppointments(aptRes.data);
+            // Filter out PENDING and CANCELLED globally for dashboard
+            const validAppointments = aptRes.data.filter((a: Appointment) => a.status !== 'PENDING' && a.status !== 'CANCELLED');
+            setAllAppointments(validAppointments);
         } catch (error) {
             console.error(error);
         } finally {

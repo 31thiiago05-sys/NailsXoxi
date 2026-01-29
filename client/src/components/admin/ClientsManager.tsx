@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../api';
 import { Loader2, Search, Phone, Mail, Calendar, Trash2, Shield, ShieldOff, Ban, Unlock, DollarSign, MessageCircle } from 'lucide-react';
+import ConfirmationModal from '../ConfirmationModal';
 
 interface Client {
     id: string;
@@ -25,6 +26,15 @@ export default function ClientsManager() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filter, setFilter] = useState<'ALL' | 'DEBT' | 'CREDIT'>('ALL');
 
+    // Confirmation Modal State
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        variant: 'danger' as 'danger' | 'info' | 'warning'
+    });
+
     useEffect(() => {
         fetchClients();
     }, []);
@@ -40,25 +50,36 @@ export default function ClientsManager() {
         }
     };
 
-    const handleAction = async (action: 'DELETE' | 'BLOCK' | 'ADMIN' | 'CLEAR_DEBT', clientId: string, clientName: string) => {
-        const confirmMsg =
-            action === 'DELETE' ? `¿Eliminar a ${clientName}? Esta acción es irreversible.` :
-                action === 'BLOCK' ? `¿Cambiar estado de bloqueo para ${clientName}?` :
-                    action === 'ADMIN' ? `¿Cambiar permisos de administrador para ${clientName}?` :
-                        `¿Limpiar la deuda de ${clientName}?`;
+    const handleAction = (action: 'DELETE' | 'BLOCK' | 'ADMIN' | 'CLEAR_DEBT', clientId: string, clientName: string) => {
+        const title =
+            action === 'DELETE' ? `¿Eliminar a ${clientName}?` :
+                action === 'BLOCK' ? `¿Bloquear a ${clientName}?` :
+                    action === 'ADMIN' ? `¿Cambiar permisos de ${clientName}?` :
+                        `¿Limpiar deuda de ${clientName}?`;
 
-        if (!window.confirm(confirmMsg)) return;
+        const message =
+            action === 'DELETE' ? 'Esta acción borrará todos sus datos y no se puede deshacer.' :
+                action === 'BLOCK' ? 'La usuaria no podrá iniciar sesión ni reservar turnos.' :
+                    action === 'ADMIN' ? 'Se concederán/revocarán permisos de acceso total al sistema.' :
+                        'Esto pondrá la deuda de la clienta en $0.';
 
-        try {
-            if (action === 'DELETE') await api.delete(`/clients/${clientId}`);
-            if (action === 'BLOCK') await api.post(`/clients/${clientId}/toggle-block`);
-            if (action === 'ADMIN') await api.post(`/clients/${clientId}/toggle-admin`);
-            if (action === 'CLEAR_DEBT') await api.post(`/clients/${clientId}/clear-debt`);
-
-            fetchClients(); // Refresh list
-        } catch {
-            alert('Error al realizar la acción');
-        }
+        setConfirmModal({
+            isOpen: true,
+            title,
+            message,
+            variant: action === 'ADMIN' ? 'warning' : 'danger',
+            onConfirm: async () => {
+                try {
+                    if (action === 'DELETE') await api.delete(`/clients/${clientId}`);
+                    if (action === 'BLOCK') await api.post(`/clients/${clientId}/toggle-block`);
+                    if (action === 'ADMIN') await api.post(`/clients/${clientId}/toggle-admin`);
+                    if (action === 'CLEAR_DEBT') await api.post(`/clients/${clientId}/clear-debt`);
+                    fetchClients();
+                } catch {
+                    alert('Error al realizar la acción');
+                }
+            }
+        });
     };
 
     const filteredClients = clients.filter(client => {
@@ -223,6 +244,15 @@ export default function ClientsManager() {
                     No se encontraron clientas con los filtros actuales.
                 </div>
             )}
+
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                variant={confirmModal.variant}
+            />
         </div>
     );
 }

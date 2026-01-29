@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../api';
 import { Loader2, Calendar, Clock, MapPin, XCircle, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import ConfirmationModal from '../ConfirmationModal';
 
 interface Appointment {
     id: string;
@@ -18,11 +19,20 @@ export default function MyAppointments() {
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Confirmation Modal State
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        variant: 'danger' as 'danger' | 'info' | 'warning'
+    });
+
     useEffect(() => {
         fetchAppointments();
     }, []);
 
-    const handleCancel = async (id: string, date: string) => {
+    const handleCancel = (id: string, date: string) => {
         const apptDate = new Date(date);
         const now = new Date();
         const hoursDiff = (apptDate.getTime() - now.getTime()) / (1000 * 60 * 60);
@@ -32,16 +42,24 @@ export default function MyAppointments() {
             ? 'Estás cancelando con menos de 72hs de anticipación. Esto generará una deuda por el valor restante del servicio. ¿Confirmar?'
             : 'Si cancelas ahora, tu seña quedará como saldo a favor por 30 días. ¿Confirmar?';
 
-        if (!window.confirm(message)) return;
-
-        try {
-            const { data } = await api.post(`/appointments/${id}/cancel`);
-            alert(data.message);
-            fetchAppointments();
-        } catch (error) {
-            const err = error as { response?: { data?: { error?: string } } };
-            alert(err.response?.data?.error || 'Error al cancelar');
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: '¿Cancelar Turno?',
+            message,
+            variant: isLate ? 'warning' : 'info',
+            onConfirm: async () => {
+                try {
+                    await api.post(`/appointments/${id}/cancel`);
+                    // Optional: Show success modal or toast here, for now alert is replaced by logic reload
+                    // Using setConfirmModal to verify success could be better, but simple reload works
+                    // Note: original code used alert(data.message), we can omit or use a toast later.
+                    fetchAppointments();
+                } catch (error) {
+                    const err = error as { response?: { data?: { error?: string } } };
+                    alert(err.response?.data?.error || 'Error al cancelar');
+                }
+            }
+        });
     };
 
     const fetchAppointments = async () => {
@@ -136,6 +154,15 @@ export default function MyAppointments() {
                         ))}
                     </div>
                 )}
+                {/* Confirmation Modal */}
+                <ConfirmationModal
+                    isOpen={confirmModal.isOpen}
+                    onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                    onConfirm={confirmModal.onConfirm}
+                    title={confirmModal.title}
+                    message={confirmModal.message}
+                    variant={confirmModal.variant}
+                />
             </div>
         </div>
     );

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, X, Save, Image as ImageIcon } from 'lucide-react';
 import { getServices, createService, updateService, deleteService, getCategories } from '../../api';
 import type { Service, Category } from '../../types';
+import ConfirmationModal from '../ConfirmationModal';
 
 export default function ServicesManager() {
     const [services, setServices] = useState<Service[]>([]);
@@ -30,6 +31,15 @@ export default function ServicesManager() {
     // UI State for "New Category"
     const [isNewCategory, setIsNewCategory] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+
+    // Confirmation Modal State
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        variant: 'danger' as 'danger' | 'info' | 'warning'
+    });
 
     useEffect(() => {
         loadData();
@@ -131,14 +141,22 @@ export default function ServicesManager() {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!window.confirm('¿Estás segura de eliminar este servicio?')) return;
-        try {
-            await deleteService(id);
-            loadData();
-        } catch (error) {
-            console.error('Error deleting service:', error);
-        }
+    const handleDelete = (id: string, name: string) => {
+        setConfirmModal({
+            isOpen: true,
+            title: '¿Eliminar servicio?',
+            message: `¿Estás segura de eliminar el servicio "${name}"? Esta acción no se puede deshacer.`,
+            variant: 'danger',
+            onConfirm: async () => {
+                try {
+                    await deleteService(id);
+                    loadData();
+                } catch (error) {
+                    console.error('Error deleting service:', error);
+                    alert('Error al eliminar servicio');
+                }
+            }
+        });
     };
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -236,7 +254,7 @@ export default function ServicesManager() {
                                                         <Edit2 size={18} />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDelete(service.id)}
+                                                        onClick={() => handleDelete(service.id, service.name)}
                                                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                         aria-label={`Eliminar servicio ${service.name}`}
                                                     >
@@ -302,7 +320,7 @@ export default function ServicesManager() {
                                                         <Edit2 size={18} />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDelete(service.id)}
+                                                        onClick={() => handleDelete(service.id, service.name)}
                                                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                         aria-label={`Eliminar servicio ${service.name}`}
                                                     >
@@ -324,6 +342,15 @@ export default function ServicesManager() {
                     </div>
                 )}
             </div>
+
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                variant={confirmModal.variant}
+            />
 
             {/* Modal */}
             {isModalOpen && (

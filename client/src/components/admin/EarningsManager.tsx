@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../api';
 import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import ConfirmationModal from '../ConfirmationModal';
 
 interface EarningItem {
     id: string;
@@ -40,6 +41,15 @@ export default function EarningsManager() {
     const [earnings, setEarnings] = useState<EarningItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+
+    // Confirmation Modal State
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        variant: 'danger' as 'danger' | 'info' | 'warning'
+    });
 
     // Form
     const [adjDesc, setAdjDesc] = useState('');
@@ -87,19 +97,27 @@ export default function EarningsManager() {
         }
     };
 
-    const handleDelete = async (id: string, type: string) => {
-        if (!window.confirm('¿Eliminar este registro?')) return;
-
-        try {
-            if (type === 'ADJUSTMENT') {
-                await api.delete(`/earnings/${id}`);
-                fetchEarnings();
-            } else {
-                alert('No se puede eliminar un turno desde acá. Cancelalo desde Turnos.');
-            }
-        } catch (e) {
-            console.error(e);
+    const handleDelete = (id: string, type: string) => {
+        if (type !== 'ADJUSTMENT') {
+            alert('No se puede eliminar un turno desde acá. Cancelalo desde Turnos.');
+            return;
         }
+
+        setConfirmModal({
+            isOpen: true,
+            title: '¿Eliminar movimiento?',
+            message: '¿Estás segura de eliminar este registro de caja?',
+            variant: 'danger',
+            onConfirm: async () => {
+                try {
+                    await api.delete(`/earnings/${id}`);
+                    fetchEarnings();
+                } catch (e) {
+                    console.error(e);
+                    alert('Error al eliminar');
+                }
+            }
+        });
     };
 
     const handleCreate = async (e: React.FormEvent) => {
@@ -244,6 +262,15 @@ export default function EarningsManager() {
                     </div>
                 </div>
             )}
+
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                variant={confirmModal.variant}
+            />
         </div>
     );
 }
