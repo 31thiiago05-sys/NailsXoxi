@@ -3,6 +3,7 @@ import api from '../../api';
 import { Loader2, Search, XCircle, UserX, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import ConfirmationModal from '../ConfirmationModal';
+import CancellationModal from './CancellationModal';
 import '../../styles/responsive-tables.css';
 
 interface Appointment {
@@ -34,6 +35,11 @@ export default function BookingsManager() {
         message: '',
         onConfirm: () => { },
         variant: 'danger' as 'danger' | 'info' | 'warning'
+    });
+
+    const [cancelModal, setCancelModal] = useState({
+        isOpen: false,
+        appointmentId: ''
     });
 
     useEffect(() => {
@@ -86,13 +92,15 @@ export default function BookingsManager() {
 
 
 
-    const handleAction = (action: 'CANCEL' | 'DELETE' | 'NOSHOW', id: string, reason: string = 'Cancelación por administrador') => {
-        const title = action === 'DELETE' ? '¿Eliminar turno permanentemente?' :
-            action === 'CANCEL' ? '¿Cancelar turno?' : '¿Marcar como ausente?';
+    const handleAction = (action: 'CANCEL' | 'DELETE' | 'NOSHOW', id: string) => {
+        if (action === 'CANCEL') {
+            setCancelModal({ isOpen: true, appointmentId: id });
+            return;
+        }
 
+        const title = action === 'DELETE' ? '¿Eliminar turno permanentemente?' : '¿Marcar como ausente?';
         const message = action === 'DELETE' ? 'Esta acción es irreversible y eliminará el turno del sistema.' :
-            action === 'CANCEL' ? 'La clienta será notificada. Dependiendo de la política de 72hs, podría generarse deuda.' :
-                'Esto marcará que la clienta no asistió y generará una deuda automática del 50% del valor del servicio.';
+            'Esto marcará que la clienta no asistió y generará una deuda automática del 50% del valor del servicio.';
 
         setConfirmModal({
             isOpen: true,
@@ -101,17 +109,27 @@ export default function BookingsManager() {
             variant: 'danger',
             onConfirm: async () => {
                 try {
-                    const endpoint = action === 'CANCEL' ? '/appointments/admin/cancel' :
-                        action === 'NOSHOW' ? '/appointments/admin/mark-noshow' :
-                            '/appointments/admin/delete';
-
-                    await api.post(endpoint, { appointmentId: id, reason });
+                    const endpoint = action === 'NOSHOW' ? '/appointments/admin/mark-noshow' : '/appointments/admin/delete';
+                    await api.post(endpoint, { appointmentId: id });
                     fetchAppointments();
                 } catch {
                     alert('Error al procesar acción');
                 }
             }
         });
+    };
+
+    const onConfirmCancel = async (reason: string) => {
+        try {
+            await api.post('/appointments/admin/cancel', {
+                appointmentId: cancelModal.appointmentId,
+                reason
+            });
+            setCancelModal({ isOpen: false, appointmentId: '' });
+            fetchAppointments();
+        } catch {
+            alert('Error al cancelar turno');
+        }
     };
 
     const filtered = appointments.filter(apt =>
@@ -219,6 +237,12 @@ export default function BookingsManager() {
                 title={confirmModal.title}
                 message={confirmModal.message}
                 variant={confirmModal.variant}
+            />
+            <CancellationModal
+                key={cancelModal.appointmentId}
+                isOpen={cancelModal.isOpen}
+                onClose={() => setCancelModal({ ...cancelModal, isOpen: false })}
+                onConfirm={onConfirmCancel}
             />
         </div>
     );

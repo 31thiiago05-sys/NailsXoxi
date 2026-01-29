@@ -19,29 +19,17 @@ export const cancelAppointmentAdmin = async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'Turno no encontrado' });
         }
 
-        // Actualizar estado a cancelado
+        // Actualizar estado a cancelado y guardar motivo
         await prisma.appointment.update({
             where: { id: appointmentId },
             data: {
                 status: 'CANCELLED',
-                // Podrías agregar un campo 'cancellationReason' al schema si querés guardarlo
+                cancellationReason: reason
             }
         });
 
-        // Calcular diferencia de tiempo
-        const apptDate = new Date(appointment.date);
-        const now = new Date();
-        const diffHours = (apptDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-
-        // Determinar política según tiempo
-        let policyText = '';
-        if (diffHours >= 72) {
-            policyText = '✅ Has cancelado con más de 72 horas de anticipación.\nSi ya abonaste la seña, esta quedará como crédito a tu favor para un próximo turno. Por favor contáctanos para reprogramar.';
-        } else {
-            policyText = '⚠️ Has cancelado con menos de 72 horas de anticipación.\nSegún nuestra política de cancelación, la seña abonada no es reembolsable ni transferible. Deberás abonar una nueva seña para volver a reservar.';
-        }
-
         // Email al cliente
+        const apptDate = new Date(appointment.date);
         const formattedDate = apptDate.toLocaleDateString('es-AR', {
             day: '2-digit',
             month: '2-digit',
@@ -55,11 +43,11 @@ export const cancelAppointmentAdmin = async (req: Request, res: Response) => {
 
         const clientEmailText = `Hola ${appointment.user.name},
 
-Lamentamos informarte que tu turno para el ${formattedDate} a las ${formattedTime} ha sido cancelado.
+Lamentamos informarte que tu turno para el ${formattedDate} a las ${formattedTime} ha sido cancelado por la administración.
 
 Motivo: ${reason}
 
-${policyText}
+Si tienes alguna duda, por favor contáctanos.
 
 Saludos,
 Nails Xoxi`;
@@ -100,7 +88,7 @@ export const markNoShow = async (req: Request, res: Response) => {
         }
 
         const servicePrice = Number(appointment.service.price);
-        const deposit = servicePrice * 0.5;
+        const deposit = Number(appointment.service.deposit);
         const penalty = servicePrice - deposit;
 
         // Actualizar deuda del usuario
@@ -114,7 +102,10 @@ export const markNoShow = async (req: Request, res: Response) => {
         // Cancelar el turno
         await prisma.appointment.update({
             where: { id: appointmentId },
-            data: { status: 'CANCELLED' }
+            data: {
+                status: 'CANCELLED',
+                cancellationReason: 'Inasistencia / Demora > 10min'
+            }
         });
 
         // Email al cliente
@@ -136,7 +127,7 @@ Te informamos que tu turno del ${formattedDate} a las ${formattedTime} ha sido c
 
 Deuda generada: $${penalty}.
 
-Podés abonar ingresando a tu cuenta en https://nailsxoxi-xo1c.onrender.com o contactándonos.`;
+Podés abonar ingresando a tu cuenta en https://www.nailsxoxi.shop o contactándonos.`;
 
         await sendEmail({
             to: appointment.user.email,
